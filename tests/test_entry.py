@@ -33,6 +33,20 @@ class test_RedBeatEntry(RedBeatCase):
         self.assertEqual(redis.zrank(self.app.redbeat_conf.schedule_key, e.key), 0)
         self.assertEqual(redis.zscore(self.app.redbeat_conf.schedule_key, e.key), e.score)
 
+    def test_save_respects_last_run_at(self):
+        last_run = self.app.now() - timedelta(seconds=30)
+        initial = self.create_entry(last_run_at=last_run)
+        initial.save()
+        expected_score = initial.score
+
+        self.create_entry().save()
+
+        redis = self.app.redbeat_redis
+        self.assertEqual(
+            redis.zscore(self.app.redbeat_conf.schedule_key, initial.key),
+            expected_score,
+        )
+
     def test_from_key_nonexistent_key(self):
         with self.assertRaises(KeyError):
             RedBeatSchedulerEntry.from_key('doesntexist', self.app)

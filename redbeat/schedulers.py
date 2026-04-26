@@ -367,6 +367,11 @@ class RedBeatSchedulerEntry(ScheduleEntry):
             'schedule': self.schedule,
             'enabled': self.enabled,
         }
+
+        redis_last_run_at = self.load_meta(self.key, app=self.app).get('last_run_at')
+        if redis_last_run_at is not None:
+            self.last_run_at = redis_last_run_at
+
         meta = {
             'last_run_at': self.last_run_at,
         }
